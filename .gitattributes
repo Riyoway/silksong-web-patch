@@ -1,0 +1,3 @@
+* text=auto eol=lf
+# patch data must stay byte-exact (hashes are checked)
+patch/** -text

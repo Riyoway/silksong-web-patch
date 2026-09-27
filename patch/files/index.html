@@ -1,0 +1,108 @@
+
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <base href="./">
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>Unity Web Player | Hollow Knight SilkSong</title>
+    <link rel="shortcut icon" href="TemplateData/favicon.ico">
+    <link rel="stylesheet" href="TemplateData/style.css">
+  </head>
+  <body>
+    <div id="unity-container">
+      <canvas id="unity-canvas" width=960 height=600 tabindex="-1"></canvas>
+      <div id="unity-loading-bar">
+        <div id="unity-logo"></div>
+        <div id="unity-progress-bar-empty">
+          <div id="unity-progress-bar-full"></div>
+        </div>
+      </div>
+      <div id="unity-warning"> </div>
+    </div>
+<script>
+/* ================= MAIN ================= */
+(async () => {
+  try {
+    // Bundles are served as plain files now (Unity caches them itself in IndexedDB),
+    // so drop the ~2.5GB zip cache that older versions of this page left in the browser.
+    if (window.caches) {
+      for (const name of await caches.keys()) {
+        if (name.includes("hksilksong")) await caches.delete(name);
+      }
+    }
+
+    /* ================= UNITY START ================= */
+    const canvas = document.querySelector("#unity-canvas");
+    const loadingBar = document.querySelector("#unity-loading-bar");
+    const progressBarFull = document.querySelector("#unity-progress-bar-full");
+    const warningBanner = document.querySelector("#unity-warning");
+
+    function unityShowBanner(msg, type) {
+      function update() {
+        warningBanner.style.display =
+          warningBanner.children.length ? 'block' : 'none';
+      }
+
+      let div = document.createElement('div');
+      div.innerHTML = msg;
+      warningBanner.appendChild(div);
+
+      if (type == 'error') {
+        div.style = 'background:red;padding:10px;';
+      } else {
+        if (type == 'warning') {
+          div.style = 'background:yellow;padding:10px;';
+        }
+        setTimeout(() => {
+          warningBanner.removeChild(div);
+          update();
+        }, 5000);
+      }
+
+      update();
+    }
+
+    const buildUrl = "Build";
+
+    const config = {
+      dataUrl: buildUrl + "/w-pt.data.unityweb",
+      frameworkUrl: buildUrl + "/w-pt.framework.js.unityweb",
+      codeUrl: buildUrl + "/w-pt.wasm.unityweb",
+      streamingAssetsUrl: "StreamingAssets",
+      companyName: "EDUrocks Group, Truffled, GN-Math",
+      productName: "Hollow Knight SilkSong",
+      productVersion: "1.0",
+      showBanner: unityShowBanner,
+    };
+
+    loadingBar.style.display = "block";
+
+    const script = document.createElement("script");
+    // Load the loader from this local build so Python's http.server can serve
+    // the whole game without relying on another host.
+    script.src = buildUrl + "/w-pt.loader.js";
+
+
+    script.onload = () => {
+      createUnityInstance(canvas, config, (progress) => {
+        progressBarFull.style.width = (progress * 100) + "%";
+      })
+      .then(() => {
+        loadingBar.remove();
+      })
+      .catch(alert);
+    };
+
+    document.body.appendChild(script);
+
+
+  } catch (err) {
+    console.error(err);
+  }
+})();
+</script>
+
+
+</body>
+</html>
